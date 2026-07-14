@@ -1,0 +1,16 @@
+# OS junk
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Editor / IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# Leftover scratch folder (not part of the site)
+ResumeBasedWebsite/
+
+# Git (nothing to ignore here)
