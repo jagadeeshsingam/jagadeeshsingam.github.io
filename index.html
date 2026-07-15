@@ -64,7 +64,7 @@ tailwind.config = {
     --blob-1: #6366f1;
     --blob-2: #8b5cf6;
     --blob-3: #ec4899;
-    --grain-opacity: 0.05;
+    --grain-opacity: 0.018;
     --grain-blend: multiply;
     --progress-track: rgba(15, 23, 42, 0.08);
     --pin-pad: #ffffff;
@@ -80,13 +80,13 @@ tailwind.config = {
     --blob-1: #6366f1;
     --blob-2: #8b5cf6;
     --blob-3: #ec4899;
-    --grain-opacity: 0.04;
+    --grain-opacity: 0.025;
     --grain-blend: screen;
     --progress-track: rgba(255, 255, 255, 0.06);
     --pin-pad: #0a0a14;
   }
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
+  html { scroll-behavior: auto; }
   body {
     background: var(--bg);
     color: var(--text);
@@ -294,7 +294,7 @@ tailwind.config = {
   .reveal { opacity: 0; transform: translateY(40px); }
 
   /* Tilt card */
-  .tilt-card { transition: transform 0.2s ease-out; transform-style: preserve-3d; }
+  .tilt-card { transition: transform 0.2s ease-out; transform-style: preserve-3d; overflow: hidden; }
 
   /* Marquee */
   .marquee-track {
@@ -980,6 +980,17 @@ if (enhanceOK && typeof Lenis !== 'undefined') {
   gsap.ticker.add((t) => lenis.raf(t * 1000));
   gsap.ticker.lagSmoothing(0);
   window.__lenis = lenis;
+
+  // Route anchor links through Lenis (no native jump)
+  document.querySelectorAll('a[href^="#"]').forEach((a) => {
+    a.addEventListener('click', (e) => {
+      const id = a.getAttribute('href');
+      if (id.length > 1) {
+        e.preventDefault();
+        lenis.scrollTo(id, { duration: 1.2 });
+      }
+    });
+  });
 }
 
 // 2. Grain — reduce on low-end devices
@@ -1002,9 +1013,9 @@ if (progressBar && progressCounter) {
   });
 }
 
-// 4. Magnetic nav links + section labels
+// 4. Magnetic nav links only (was hitting every .font-mono.text-sm label)
 if (enhanceOK) {
-  document.querySelectorAll('nav a:not(.magnetic-btn), .font-mono.text-sm').forEach((el) => {
+  document.querySelectorAll('nav a:not(.magnetic-btn)').forEach((el) => {
     if (!el.dataset.magnetic) {
       el.dataset.magnetic = '1';
       el.classList.add('magnetic');
@@ -1021,35 +1032,37 @@ if (enhanceOK) {
   });
 }
 
-// 5. Sticky experience heading (lightweight "pin")
+// 5. Sticky experience heading (lightweight "pin" — no solid bg)
 if (!isCoarsePointer) {
   const expHeading = document.querySelector('#experience .reveal');
   if (expHeading) {
     expHeading.style.position = 'sticky';
     expHeading.style.top = '80px';
     expHeading.style.zIndex = '5';
-    expHeading.style.background = 'var(--bg)';
+    expHeading.style.backdropFilter = 'blur(12px)';
+    expHeading.style.WebkitBackdropFilter = 'blur(12px)';
     expHeading.style.paddingBottom = '1rem';
+    expHeading.style.marginBottom = '-1px';
   }
 }
 
-// 6. Enhanced tilt cards with depth parallax
+// 6. Enhanced tilt cards with depth parallax (restrained — badges stay inside)
 if (enhanceOK) {
   document.querySelectorAll('[data-tilt]').forEach((card) => {
-    const children = card.querySelectorAll('div, span, h3');
+    const layers = card.querySelectorAll(':scope > *');
     card.addEventListener('mousemove', (e) => {
       const r = card.getBoundingClientRect();
       const x = (e.clientX - r.left) / r.width - 0.5;
       const y = (e.clientY - r.top) / r.height - 0.5;
-      card.style.transform = `perspective(800px) rotateY(${x * 10}deg) rotateX(${y * -10}deg)`;
-      children.forEach((child, i) => {
-        const depth = (i + 1) * 4;
-        gsap.to(child, { x: x * depth, y: y * depth, duration: 0.3, ease: 'power2.out' });
+      card.style.transform = `perspective(800px) rotateY(${x * 8}deg) rotateX(${y * -8}deg)`;
+      layers.forEach((layer, i) => {
+        const depth = (i + 1) * 2;
+        gsap.to(layer, { x: x * depth, y: y * depth, duration: 0.3, ease: 'power2.out' });
       });
     });
     card.addEventListener('mouseleave', () => {
       card.style.transform = 'perspective(800px) rotateY(0) rotateX(0)';
-      children.forEach((child) => { gsap.to(child, { x: 0, y: 0, duration: 0.5, ease: 'back.out(1.7)' }); });
+      layers.forEach((layer) => { gsap.to(layer, { x: 0, y: 0, duration: 0.5, ease: 'back.out(1.7)' }); });
     });
   });
 }
